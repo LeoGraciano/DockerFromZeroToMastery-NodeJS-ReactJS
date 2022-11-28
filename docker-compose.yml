@@ -1,0 +1,51 @@
+version: '3.4'
+
+networks:
+    udemy-network:
+        driver: bridge
+
+services:
+
+    db:
+        image: mysql:latest
+        command: mysqld --default_authentication_plugin=mysql_native_password
+        restart: always
+        environment:
+            TZ: America/Sao_Paulo
+            MYSQL_ROOT_PASSWORD: 58cbbd92ab5025c63eaa070e354363406141d48a0d47b7bdf7fcd92593610f9a
+            MYSQL_USER: my_user
+            MYSQL_DATABASE: db_node_react
+            MYSQL_PASSWORD: 5f0b095f63e8d61a62cf459f4d8abc08e60070672cdc11862064a1e4d58ec82c
+        ports:
+            - 3308:3306
+        networks:
+            - udemy-network
+    backend:
+        build:
+            context: ./backend
+            dockerfile: ./Dockerfile
+        image: node-react-backend
+        restart: always
+        environment:
+            TZ: America/Sao_Paulo
+        ports:
+            - 5000:5000
+        command: ./wait-for.sh db:3306 -- ./startup.sh
+        depends_on:
+            - db
+        networks:
+            - udemy-network
+    frontend:
+        build:
+            context: ./frontend
+            dockerfile: ./Dockerfile
+        image: node-react-frontend
+        restart: always
+        environment:
+            TZ: America/Sao_Paulo
+        ports:
+            - 80:80
+        depends_on:
+            - db
+        networks:
+            - udemy-network
